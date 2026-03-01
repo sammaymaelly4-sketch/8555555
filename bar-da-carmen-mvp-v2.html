@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0A1A35">
+<title>Bar da Carmen</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        navy: { 900:'#061025', 800:'#0A1A35', 700:'#0F2550', 600:'#1A3A6B' },
+        gold: { DEFAULT:'#E6A817', light:'#FFD04A', dark:'#B8860B' },
+        cyan: { DEFAULT:'#00C8FF', dim:'#00C8FF30' },
+        blue: { DEFAULT:'#4A90E8', dim:'#4A90E820' },
+      },
+      fontFamily: {
+        display: ['Playfair Display','serif'],
+        body: ['DM Sans','sans-serif'],
+      }
+    }
+  }
+}
+</script>
+<style>
+  *{-webkit-tap-highlight-color:transparent;box-sizing:border-box;}
+  body{font-family:'DM Sans',sans-serif;background:#061025;overscroll-behavior:none;margin:0;}
+  ::-webkit-scrollbar{display:none;}
+  *{scrollbar-width:none;}
+
+  /* SPLASH */
+  #splash{transition:opacity .6s ease,transform .6s ease;}
+  #splash.hide{opacity:0;transform:scale(1.06);pointer-events:none;}
+
+  /* PAGES */
+  .page{display:none;}
+  .page.active{display:flex;flex-direction:column;animation:pageIn .3s ease;}
+  @keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+  /* GOLD GLOW BORDER */
+  .gold-border{border:1px solid #E6A81760;box-shadow:0 0 12px #E6A81720,inset 0 0 12px #E6A81708;}
+  .gold-border-bright{border:1.5px solid #E6A817;box-shadow:0 0 20px #E6A81740,inset 0 0 8px #E6A81710;}
+  .cyan-border{border:1.5px solid #00C8FF80;box-shadow:0 0 16px #00C8FF30;}
+
+  /* NEON TEXT */
+  .gold-text{background:linear-gradient(135deg,#E6A817,#FFD04A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .cyan-text{color:#00C8FF;text-shadow:0 0 8px #00C8FF80;}
+
+  /* PRESSABLE */
+  .press{transition:transform .15s,opacity .15s;cursor:pointer;}
+  .press:active{transform:scale(.95);opacity:.85;}
+
+  /* TOP NAV PILL */
+  .nav-pill{transition:all .2s ease;border:1px solid #E6A81730;border-radius:999px;padding:8px 14px;display:flex;flex-direction:column;align-items:center;gap:2px;}
+  .nav-pill.active{background:linear-gradient(135deg,#E6A817,#FFD04A);border-color:#E6A817;box-shadow:0 0 18px #E6A81760;}
+  .nav-pill.active .pill-icon{filter:none;}
+  .nav-pill.active .pill-label{color:#061025;font-weight:700;}
+  .pill-icon{font-size:18px;filter:saturate(0) brightness(0.6);}
+  .pill-label{font-size:9px;font-weight:500;color:#ffffff50;letter-spacing:.03em;}
+
+  /* PRODUCT CARD */
+  .product-card{border-radius:18px;overflow:hidden;position:relative;border:1px solid #E6A81740;background:#0A1A35;}
+  .product-card:after{content:'';position:absolute;inset:0;border-radius:18px;box-shadow:inset 0 0 20px #E6A81710;}
+  .product-card-img{width:100%;height:130px;object-fit:cover;display:flex;align-items:center;justify-content:center;font-size:64px;background:linear-gradient(135deg,#0F2550,#1A3A6B);}
+
+  /* SHIMMER */
+  @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+  .shimmer{background:linear-gradient(90deg,#1A3A6B20,#4A90E825,#1A3A6B20);background-size:200% 100%;animation:shimmer 1.8s infinite;}
+
+  /* BADGE BOUNCE */
+  @keyframes badgeBounce{0%,100%{transform:scale(1)}40%{transform:scale(1.5)}70%{transform:scale(.9)}}
+  .badge-bounce{animation:badgeBounce .4s ease;}
+
+  /* STATUS PULSE */
+  @keyframes statusPulse{0%,100%{box-shadow:0 0 0 0 #22c55e80}50%{box-shadow:0 0 0 8px #22c55e00}}
+  .status-pulse{animation:statusPulse 2s infinite;}
+
+  /* MODAL */
+  #productModal{transition:opacity .3s;}
+  .modal-sheet{transition:transform .35s cubic-bezier(.34,1.56,.64,1);}
+  #productModal.hidden .modal-sheet{transform:translateY(100%);}
+  #productModal.show .modal-sheet{transform:translateY(0);}
+
+  /* TOAST */
+  #toast{transition:all .35s cubic-bezier(.34,1.56,.64,1);transform:translateY(-100px);opacity:0;}
+  #toast.show{transform:translateY(0);opacity:1;}
+
+  /* RIPPLE */
+  .ripple-wrap{position:relative;overflow:hidden;}
+  .ripple{position:absolute;border-radius:50%;background:rgba(255,255,255,.15);transform:scale(0);animation:rippleA .6s ease-out;pointer-events:none;}
+  @keyframes rippleA{to{transform:scale(5);opacity:0;}}
+
+  /* MAP FAKE */
+  .map-bg{background:linear-gradient(135deg,#0A1A35 0%,#0F2550 50%,#0A1A35 100%);position:relative;overflow:hidden;}
+  .map-grid-line{position:absolute;background:#4A90E815;}
+
+  /* INGREDIENT CHIP */
+  .ing-chip{transition:all .2s;border:1px solid #E6A81730;border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;}
+  .ing-chip.on{border-color:#4A90E8;background:#4A90E815;box-shadow:0 0 12px #4A90E840;}
+
+  /* CTA BUTTON */
+  .btn-gold{background:linear-gradient(135deg,#B8860B,#E6A817,#FFD04A);border-radius:999px;font-weight:700;color:#061025;box-shadow:0 4px 20px #E6A81760;}
+  .btn-blue{background:linear-gradient(135deg,#1A3A6B,#4A90E8);border-radius:999px;font-weight:600;color:#fff;box-shadow:0 4px 16px #4A90E840;}
+
+  /* SCROLL SNAP */
+  .snap-row{display:flex;overflow-x:auto;gap:12px;scroll-snap-type:x mandatory;padding-bottom:4px;}
+  .snap-item{scroll-snap-align:start;flex-shrink:0;}
+
+  /* WHATSAPP BAR */
+  #waBar{background:linear-gradient(90deg,#0A1A35,#0F2550);border-top:1px solid #E6A81730;}
+
+  /* CATEGORY CHIP */
+  .cat-btn{transition:all .2s;flex-shrink:0;border:1px solid #E6A81730;border-radius:999px;padding:6px 14px;font-size:11px;font-weight:500;color:#ffffff50;white-space:nowrap;}
+  .cat-btn.on{border-color:#E6A817;color:#E6A817;background:#E6A81715;box-shadow:0 0 10px #E6A81730;}
+</style>
+</head>
+<body class="bg-navy-900 text-white min-h-screen" style="max-width:390px;margin:0 auto;position:relative;">
+
+<!-- TOAST -->
+<div id="toast" class="fixed top-4 left-4 right-4 z-50" style="max-width:360px;margin:0 auto;">
+  <div class="gold-border rounded-2xl px-4 py-3 flex items-center gap-3" style="background:#0A1A35;">
+    <span id="toastIcon" class="text-xl">✅</span>
+    <span id="toastMsg" class="text-sm font-medium"></span>
+  </div>
+</div>
+
+<!-- ===== SPLASH ===== -->
+<div id="splash" class="fixed inset-0 z-50 flex flex-col items-center justify-center" style="background:#061025;max-width:390px;margin:0 auto;">
+  <!-- anéis -->
+  <div style="position:absolute;width:280px;height:280px;border-radius:50%;border:1px solid #E6A81720;animation:statusPulse 3s infinite;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+  <div style="position:absolute;width:200px;height:200px;border-radius:50%;border:1px solid #00C8FF15;animation:statusPulse 2s .8s infinite;top:50%;left:50%;transform:translate(-50%,-50%)"></div>
+
+  <!-- silhueta -->
+  <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);opacity:.06;width:200px;">
+    <svg viewBox="0 0 200 400" fill="none">
+      <ellipse cx="100" cy="60" rx="38" ry="45" fill="#4A90E8"/>
+      <ellipse cx="100" cy="42" rx="42" ry="30" fill="#4A90E8"/>
+      <ellipse cx="72" cy="80" rx="14" ry="40" fill="#4A90E8"/>
+      <ellipse cx="128" cy="80" rx="14" ry="40" fill="#4A90E8"/>
+      <rect x="88" y="98" width="24" height="20" rx="4" fill="#4A90E8"/>
+      <path d="M30 130 Q50 115 88 118 L112 118 Q150 115 170 130 L180 260 Q160 270 100 272 Q40 270 20 260 Z" fill="#4A90E8"/>
+      <path d="M70 140 Q100 148 130 140 L125 260 Q100 265 75 260 Z" fill="#1E4E9E"/>
+      <path d="M30 130 Q10 160 15 210 Q20 230 35 225 Q45 220 50 195 L60 150 Z" fill="#4A90E8"/>
+      <path d="M170 130 Q190 160 185 210 Q180 230 165 225 Q155 220 150 195 L140 150 Z" fill="#4A90E8"/>
+      <rect x="65" y="260" width="30" height="140" rx="8" fill="#4A90E8"/>
+      <rect x="105" y="260" width="30" height="140" rx="8" fill="#4A90E8"/>
+    </svg>
+  </div>
+
+  <div style="text-align:center;z-index:2;" id="splashContent">
+    <p style="font-size:10px;letter-spacing:.35em;color:#E6A81799;text-transform:uppercase;font-family:'DM Sans',sans-serif;margin-bottom:12px;">Vila São José · Taubaté</p>
+    <h1 style="font-family:'Playfair Display',serif;font-size:62px;font-weight:900;line-height:.95;color:#fff;margin:0;">
+      Bar da<br><em style="color:#4A90E8;font-style:italic;">Carmen</em>
+    </h1>
+    <div style="width:48px;height:2px;margin:16px auto;background:linear-gradient(90deg,transparent,#E6A817,transparent);"></div>
+    <p style="font-size:11px;letter-spacing:.2em;color:#ffffff40;text-transform:uppercase;">A cerveja mais gelada da Vila</p>
+    <div style="margin-top:32px;display:inline-flex;align-items:center;gap:10px;border:1px solid #E6A81740;border-radius:999px;padding:10px 24px;">
+      <span style="font-family:'Playfair Display',serif;font-size:32px;font-weight:700;color:#E6A817;">40+</span>
+      <span style="font-size:10px;color:#ffffff40;text-transform:uppercase;letter-spacing:.15em;line-height:1.4;">anos<br>servindo</span>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app" style="opacity:0;transition:opacity .5s;display:flex;flex-direction:column;min-height:100vh;">
+
+  <!-- TOP HEADER (sticky) -->
+  <div style="position:sticky;top:0;z-index:20;background:#061025;border-bottom:1px solid #E6A81720;padding:14px 16px 10px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div>
+        <p style="font-size:9px;letter-spacing:.3em;color:#E6A81780;text-transform:uppercase;margin:0 0 2px;">Vila São José, Taubaté</p>
+        <h1 style="font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:#fff;margin:0;line-height:1.1;">
+          Bar da <em style="color:#4A90E8;font-style:italic;">Carmen</em>
+        </h1>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div class="status-pulse" style="width:10px;height:10px;border-radius:50%;background:#22c55e;"></div>
+        <span style="font-size:11px;color:#22c55e;font-weight:600;">Aberto</span>
+      </div>
+    </div>
+
+    <!-- TOP NAV PILLS -->
+    <div style="display:flex;gap:6px;overflow-x:auto;" id="topNav">
+      <button class="nav-pill active press ripple-wrap" onclick="navTo('home',this)">
+        <span class="pill-icon">🏠</span><span class="pill-label">Home</span>
+      </button>
+      <button class="nav-pill press ripple-wrap" onclick="navTo('menu',this)">
+        <span class="pill-icon">📋</span><span class="pill-label">Menu</span>
+      </button>
+      <button class="nav-pill press ripple-wrap" onclick="navTo('drinks',this)">
+        <span class="pill-icon">🍹</span><span class="pill-label">Drinks</span>
+      </button>
+      <button class="nav-pill press ripple-wrap" onclick="navTo('delivery',this)">
+        <span class="pill-icon">🛵</span><span class="pill-label">Delivery</span>
+      </button>
+      <button class="nav-pill press ripple-wrap" onclick="navTo('cart',this)">
+        <span class="pill-icon">🛒</span>
+        <span class="pill-label" id="cartPillLabel">Pedido</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== PAGE HOME ===== -->
+  <div class="page active" id="page-home" style="flex:1;overflow-y:auto;padding-bottom:80px;">
+
+    <!-- Welcome -->
+    <div style="padding:20px 16px 12px;">
+      <p style="font-size:13px;color:#ffffff60;margin:0 0 2px;">Bem-vindo ao</p>
+      <h2 style="font-family:'Playfair Display',serif;font-size:26px;font-weight:900;margin:0;color:#fff;">
+        Bar da <em style="color:#4A90E8;">Carmen</em>, <span style="color:#E6A817;">amigo!</span>
+      </h2>
+    </div>
+
+    <!-- Promo Banner -->
+    <div style="padding:0 16px 16px;">
+      <div class="press ripple-wrap gold-border" style="border-radius:20px;background:linear-gradient(135deg,#0F2550,#1A3A6B);padding:16px;position:relative;overflow:hidden;" onclick="showToast('Promoção adicionada!','🔥')">
+        <div style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:56px;opacity:.15;">🍺</div>
+        <p style="font-size:9px;letter-spacing:.3em;color:#E6A81799;text-transform:uppercase;margin:0 0 4px;">🔥 Promoção do dia</p>
+        <p style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin:0 0 4px;color:#fff;">Kit Final de Semana</p>
+        <p style="font-size:12px;color:#ffffff60;margin:0 0 10px;">6 cervejas + 2 energéticos</p>
+        <div style="display:flex;align-items:baseline;gap:8px;">
+          <span style="font-size:12px;color:#ffffff30;text-decoration:line-through;">R$ 72</span>
+          <span class="gold-text" style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;">R$ 54</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Featured Products horizontal scroll -->
+    <div style="padding:0 16px 8px;">
+      <p style="font-size:10px;letter-spacing:.25em;color:#E6A81799;text-transform:uppercase;margin:0 0 12px;">Destaques</p>
+      <div class="snap-row" id="featuredRow"></div>
+    </div>
+
+    <!-- CTA Peça Agora -->
+    <div style="padding:8px 16px 20px;text-align:center;">
+      <button class="btn-gold press ripple-wrap" style="padding:14px 48px;font-size:15px;letter-spacing:.05em;" onclick="navToPage('menu')">
+        Peça Agora →
+      </button>
+    </div>
+
+    <!-- Order Tracking -->
+    <div style="padding:0 16px 20px;" id="trackingSection">
+      <div class="gold-border" style="border-radius:20px;background:#0A1A35;overflow:hidden;">
+        <div style="padding:12px 16px;border-bottom:1px solid #E6A81720;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:12px;font-weight:600;color:#E6A817;">Pedido #4829</span>
+          <span style="font-size:11px;color:#22c55e;">● Em rota</span>
+        </div>
+        <!-- Fake map -->
+        <div class="map-bg" style="height:120px;padding:12px;position:relative;">
+          <!-- grid lines -->
+          <div style="position:absolute;inset:0;opacity:.4;">
+            <div style="position:absolute;top:30%;left:0;right:0;height:1px;background:#4A90E820;"></div>
+            <div style="position:absolute;top:60%;left:0;right:0;height:1px;background:#4A90E820;"></div>
+            <div style="position:absolute;left:25%;top:0;bottom:0;width:1px;background:#4A90E820;"></div>
+            <div style="position:absolute;left:55%;top:0;bottom:0;width:1px;background:#4A90E820;"></div>
+            <div style="position:absolute;left:80%;top:0;bottom:0;width:1px;background:#4A90E820;"></div>
+          </div>
+          <!-- Route line -->
+          <svg style="position:absolute;inset:0;width:100%;height:100%;" viewBox="0 0 300 120">
+            <path d="M 40 90 Q 80 60 140 50 Q 200 40 250 30" stroke="#00C8FF" stroke-width="2.5" fill="none" stroke-dasharray="6 3" opacity=".8"/>
+            <circle cx="40" cy="90" r="6" fill="#E6A817"/>
+            <circle cx="250" cy="30" r="6" fill="#22c55e"/>
+          </svg>
+          <!-- Labels -->
+          <div style="position:absolute;left:16px;bottom:14px;font-size:9px;color:#E6A817;font-weight:700;letter-spacing:.05em;">BAR</div>
+          <div style="position:absolute;right:16px;top:14px;font-size:9px;color:#22c55e;font-weight:700;">VOCÊ</div>
+          <div style="position:absolute;right:16px;bottom:14px;background:#0A1A35;border:1px solid #E6A81760;border-radius:10px;padding:4px 10px;text-align:center;">
+            <p style="font-size:8px;color:#E6A81799;margin:0;text-transform:uppercase;letter-spacing:.1em;">Chegada</p>
+            <p style="font-size:14px;font-weight:700;color:#E6A817;margin:0;">25-35 min</p>
+          </div>
+        </div>
+        <div style="padding:10px 16px;">
+          <p style="font-size:11px;color:#ffffff50;margin:0;">Mapa · Vila São José · Taubaté</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE MENU ===== -->
+  <div class="page" id="page-menu" style="flex:1;overflow-y:auto;padding-bottom:80px;">
+    <div style="padding:16px;">
+      <!-- Search -->
+      <div style="position:relative;margin-bottom:16px;">
+        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#4A90E880;">🔍</span>
+        <input id="searchInput" type="text" placeholder="Buscar..." oninput="filterProducts(this.value)"
+          style="width:100%;background:#0A1A35;border:1px solid #E6A81730;border-radius:999px;padding:12px 16px 12px 40px;font-size:13px;color:#fff;outline:none;font-family:'DM Sans',sans-serif;">
+      </div>
+      <!-- Categories -->
+      <div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:16px;">
+        <button class="cat-btn on press" onclick="setCategory('todos',this)">Todos</button>
+        <button class="cat-btn press" onclick="setCategory('cerveja',this)">🍺 Cervejas</button>
+        <button class="cat-btn press" onclick="setCategory('drink',this)">🍹 Drinks</button>
+        <button class="cat-btn press" onclick="setCategory('quente',this)">☕ Quentes</button>
+        <button class="cat-btn press" onclick="setCategory('nao-alc',this)">🧃 Sem álcool</button>
+        <button class="cat-btn press" onclick="setCategory('bomboniere',this)">🍬 Bomboniere</button>
+      </div>
+      <!-- Grid -->
+      <div id="menuGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"></div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE DRINKS (Builder) ===== -->
+  <div class="page" id="page-drinks" style="flex:1;overflow-y:auto;padding-bottom:80px;">
+    <div style="padding:16px;">
+      <p style="font-size:10px;letter-spacing:.3em;color:#E6A817;text-transform:uppercase;margin:0 0 4px;">Personalizado</p>
+      <h2 style="font-family:'Playfair Display',serif;font-size:26px;font-weight:900;margin:0 0 20px;">Monte seu <em style="color:#4A90E8;">Drink</em></h2>
+
+      <!-- Base -->
+      <p style="font-size:10px;letter-spacing:.2em;color:#E6A81799;text-transform:uppercase;margin:0 0 10px;">1 · Base</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;" id="baseGrid">
+        <div class="ing-chip on press" onclick="selBase(this,'Cachaça')"><div style="font-size:28px;margin-bottom:4px;">🥃</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Cachaça</p></div>
+        <div class="ing-chip press" onclick="selBase(this,'Vodka')"><div style="font-size:28px;margin-bottom:4px;">🍸</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Vodka</p></div>
+        <div class="ing-chip press" onclick="selBase(this,'Rum')"><div style="font-size:28px;margin-bottom:4px;">🌴</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Rum</p></div>
+        <div class="ing-chip press" onclick="selBase(this,'Tequila')"><div style="font-size:28px;margin-bottom:4px;">🌵</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Tequila</p></div>
+        <div class="ing-chip press" onclick="selBase(this,'Gin')"><div style="font-size:28px;margin-bottom:4px;">🌿</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Gin</p></div>
+        <div class="ing-chip press" onclick="selBase(this,'Sem álcool')"><div style="font-size:28px;margin-bottom:4px;">💧</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Zero</p></div>
+      </div>
+
+      <!-- Mix -->
+      <p style="font-size:10px;letter-spacing:.2em;color:#E6A81799;text-transform:uppercase;margin:0 0 10px;">2 · Mix</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;">
+        <div class="ing-chip on press" onclick="togExtra(this,'Gelo')"><div style="font-size:28px;margin-bottom:4px;">🧊</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Gelo</p></div>
+        <div class="ing-chip press" onclick="togExtra(this,'Energético')"><div style="font-size:28px;margin-bottom:4px;">⚡</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Energético</p></div>
+        <div class="ing-chip press" onclick="togExtra(this,'Limão')"><div style="font-size:28px;margin-bottom:4px;">🍋</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Limão</p></div>
+        <div class="ing-chip press" onclick="togExtra(this,'Suco')"><div style="font-size:28px;margin-bottom:4px;">🧃</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Suco</p></div>
+        <div class="ing-chip press" onclick="togExtra(this,'Refri')"><div style="font-size:28px;margin-bottom:4px;">🥤</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Refri</p></div>
+        <div class="ing-chip press" onclick="togExtra(this,'Hortelã')"><div style="font-size:28px;margin-bottom:4px;">🌱</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Hortelã</p></div>
+      </div>
+
+      <!-- Tamanho -->
+      <p style="font-size:10px;letter-spacing:.2em;color:#E6A81799;text-transform:uppercase;margin:0 0 10px;">3 · Tamanho</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:24px;" id="sizeGrid">
+        <div class="ing-chip press" onclick="selSize(this,'Copo',12)"><div style="font-size:28px;margin-bottom:4px;">🥛</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Copo</p><p style="font-size:11px;color:#E6A817;font-weight:700;margin:2px 0 0;">R$12</p></div>
+        <div class="ing-chip on press" onclick="selSize(this,'Copão',18)"><div style="font-size:28px;margin-bottom:4px;">🍺</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Copão</p><p style="font-size:11px;color:#E6A817;font-weight:700;margin:2px 0 0;">R$18</p></div>
+        <div class="ing-chip press" onclick="selSize(this,'Garrafa',35)"><div style="font-size:28px;margin-bottom:4px;">🍾</div><p style="font-size:11px;color:#ffffffcc;margin:0;">Garrafa</p><p style="font-size:11px;color:#E6A817;font-weight:700;margin:2px 0 0;">R$35</p></div>
+      </div>
+
+      <!-- Preview -->
+      <div class="gold-border" style="border-radius:16px;background:#0A1A35;padding:16px;margin-bottom:16px;">
+        <p style="font-size:10px;color:#ffffff40;margin:0 0 6px;text-transform:uppercase;letter-spacing:.2em;">Seu drink</p>
+        <p id="drinkPreview" style="font-size:14px;color:#fff;font-weight:500;margin:0 0 12px;">Cachaça + Gelo (Copão)</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <p style="font-size:10px;color:#ffffff40;margin:0;">Total</p>
+            <p id="drinkPrice" class="gold-text" style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;margin:0;">R$ 18</p>
+          </div>
+          <button class="btn-gold press ripple-wrap" style="padding:12px 24px;font-size:13px;" onclick="addDrink()">
+            Adicionar 🍹
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PAGE DELIVERY (Cart) ===== -->
+  <div class="page" id="page-delivery" style="flex:1;overflow-y:auto;padding-bottom:80px;">
+    <div style="padding:16px;">
+      <p style="font-size:10px;letter-spacing:.3em;color:#E6A817;text-transform:uppercase;margin:0 0 4px;">Confirme seu</p>
+      <h2 style="font-family:'Playfair Display',serif;font-size:26px;font-weight:900;margin:0 0 20px;">Pedido</h2>
+
+      <div id="cartList"></div>
+      <div id="cartEmptyMsg" style="text-align:center;padding:40px 0;display:none;">
+        <div style="font-size:48px;margin-bottom:12px;">🛒</div>
+        <p style="color:#ffffff40;font-size:13px;">Carrinho vazio</p>
+        <button onclick="navToPage('menu')" style="margin-top:12px;color:#4A90E8;font-size:13px;background:none;border:none;cursor:pointer;">Ver cardápio →</button>
+      </div>
+
+      <!-- Entrega -->
+      <div class="gold-border" style="border-radius:16px;background:#0A1A35;padding:16px;margin-bottom:12px;">
+        <p style="font-size:10px;letter-spacing:.2em;color:#E6A81799;text-transform:uppercase;margin:0 0 12px;">Entrega</p>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <button id="b-delivery" class="press" style="flex:1;border:1.5px solid #E6A817;border-radius:999px;padding:10px;font-size:12px;font-weight:700;color:#E6A817;background:#E6A81715;" onclick="setDel('delivery')">🛵 Delivery</button>
+          <button id="b-retirada" class="press" style="flex:1;border:1px solid #ffffff20;border-radius:999px;padding:10px;font-size:12px;font-weight:500;color:#ffffff50;background:none;" onclick="setDel('retirada')">🏠 Retirar</button>
+        </div>
+        <input id="addrInput" type="text" placeholder="Seu endereço completo..."
+          style="width:100%;background:#061025;border:1px solid #E6A81730;border-radius:12px;padding:12px;font-size:13px;color:#fff;outline:none;font-family:'DM Sans',sans-serif;">
+      </div>
+
+      <!-- Pagamento -->
+      <div class="gold-border" style="border-radius:16px;background:#0A1A35;padding:16px;margin-bottom:12px;">
+        <p style="font-size:10px;letter-spacing:.2em;color:#E6A81799;text-transform:uppercase;margin:0 0 12px;">Pagamento</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+          <button id="p-pix" class="press" style="border:1.5px solid #E6A817;border-radius:12px;padding:12px 8px;font-size:12px;font-weight:700;color:#E6A817;background:#E6A81715;" onclick="setPay('pix')">📱 PIX</button>
+          <button id="p-cartao" class="press" style="border:1px solid #ffffff20;border-radius:12px;padding:12px 8px;font-size:12px;font-weight:500;color:#ffffff50;background:none;" onclick="setPay('cartao')">💳 Cartão</button>
+          <button id="p-dinheiro" class="press" style="border:1px solid #ffffff20;border-radius:12px;padding:12px 8px;font-size:12px;font-weight:500;color:#ffffff50;background:none;" onclick="setPay('dinheiro')">💵 Dinheiro</button>
+        </div>
+      </div>
+
+      <!-- Totais -->
+      <div class="gold-border" style="border-radius:16px;background:#0A1A35;padding:16px;margin-bottom:20px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:13px;color:#ffffff60;">Subtotal</span>
+          <span id="subtotal" style="font-size:13px;color:#fff;">R$ 0,00</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span style="font-size:13px;color:#ffffff60;">Taxa de entrega</span>
+          <span style="font-size:13px;color:#22c55e;font-weight:600;">Grátis</span>
+        </div>
+        <div style="height:1px;background:#E6A81720;margin:8px 0;"></div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="font-size:14px;font-weight:600;color:#fff;">Total</span>
+          <span id="totalAmt" class="gold-text" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;">R$ 0,00</span>
+        </div>
+      </div>
+
+      <button class="btn-gold press ripple-wrap" style="width:100%;padding:16px;font-size:15px;" onclick="confirmOrder()">
+        Confirmar Pedido 🚀
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== PAGE CART (Status) ===== -->
+  <div class="page" id="page-cart" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;">
+    <div style="width:88px;height:88px;border-radius:50%;background:#0A1A35;border:2px solid #22c55e;display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 16px;animation:statusPulse 2s infinite;">🛵</div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:26px;font-weight:900;margin:0 0 8px;">Pedido <em style="color:#4A90E8;">Confirmado!</em></h2>
+    <p style="font-size:13px;color:#ffffff50;margin:0 0 28px;">Preparando com carinho para você</p>
+
+    <div style="width:100%;display:flex;flex-direction:column;gap:10px;margin-bottom:28px;">
+      <div style="display:flex;align-items:center;gap:12px;background:#0A1A35;border:1px solid #22c55e40;border-radius:16px;padding:14px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#22c55e20;display:flex;align-items:center;justify-content:center;font-size:16px;">✅</div>
+        <div style="text-align:left;"><p style="font-size:13px;font-weight:600;color:#fff;margin:0;">Pedido recebido</p><p style="font-size:11px;color:#22c55e;margin:0;">Agora mesmo</p></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;background:#0A1A35;border:1px solid #E6A81740;border-radius:16px;padding:14px;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#E6A81720;display:flex;align-items:center;justify-content:center;font-size:16px;animation:spin 2s linear infinite;">⚙️</div>
+        <div style="text-align:left;"><p style="font-size:13px;font-weight:600;color:#fff;margin:0;">Preparando</p><p style="font-size:11px;color:#E6A817;margin:0;">~10 minutos</p></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;background:#0A1A35;border:1px solid #ffffff10;border-radius:16px;padding:14px;opacity:.4;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#ffffff05;display:flex;align-items:center;justify-content:center;font-size:16px;">🛵</div>
+        <div style="text-align:left;"><p style="font-size:13px;font-weight:600;color:#fff;margin:0;">A caminho</p><p style="font-size:11px;color:#ffffff40;margin:0;">Aguardando motoboy</p></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;background:#0A1A35;border:1px solid #ffffff10;border-radius:16px;padding:14px;opacity:.4;">
+        <div style="width:36px;height:36px;border-radius:50%;background:#ffffff05;display:flex;align-items:center;justify-content:center;font-size:16px;">🏠</div>
+        <div style="text-align:left;"><p style="font-size:13px;font-weight:600;color:#fff;margin:0;">Entregue</p><p style="font-size:11px;color:#ffffff40;margin:0;">Aproveite!</p></div>
+      </div>
+    </div>
+
+    <button class="press" style="border:1px solid #4A90E860;border-radius:999px;padding:12px 32px;font-size:13px;color:#4A90E8;background:none;" onclick="navTo('home',document.querySelector('.nav-pill'))">
+      Novo pedido
+    </button>
+  </div>
+
+</div><!-- /app -->
+
+<!-- PRODUCT MODAL -->
+<div id="productModal" class="hidden" style="position:fixed;inset:0;z-index:30;display:flex;align-items:flex-end;" onclick="closeModal(event)">
+  <div style="position:absolute;inset:0;background:#00000080;backdrop-filter:blur(4px);"></div>
+  <div class="modal-sheet" style="position:relative;width:100%;max-width:390px;margin:0 auto;background:#0A1A35;border:1px solid #E6A81750;border-radius:28px 28px 0 0;overflow:hidden;transform:translateY(100%);">
+    <!-- Image header -->
+    <div style="width:100%;height:180px;position:relative;overflow:hidden;">
+      <img id="mImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;">
+      <div id="mEmojiLarge" style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:72px;background:linear-gradient(135deg,#0F2550,#1A3A6B);"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,#0A1A35,transparent 60%);"></div>
+      <div id="mEmoji" style="display:none;"></div>
+      <!-- Drag handle -->
+      <div style="position:absolute;top:12px;left:50%;transform:translateX(-50%);width:40px;height:4px;background:#ffffff30;border-radius:999px;"></div>
+    </div>
+    <div style="padding:20px 24px 40px;">
+      <h3 id="mName" style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin:0 0 4px;color:#fff;"></h3>
+      <p id="mDesc" style="font-size:13px;color:#ffffff50;margin:0 0 20px;"></p>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <span id="mPrice" class="gold-text" style="font-family:'Playfair Display',serif;font-size:28px;font-weight:900;"></span>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button onclick="chgQty(-1)" style="width:36px;height:36px;border-radius:50%;border:1px solid #E6A81750;color:#E6A817;font-size:18px;font-weight:700;background:none;cursor:pointer;">-</button>
+          <span id="mQty" style="font-size:18px;font-weight:700;color:#fff;min-width:20px;text-align:center;">1</span>
+          <button onclick="chgQty(1)" style="width:36px;height:36px;border-radius:50%;background:#E6A817;color:#061025;font-size:18px;font-weight:700;border:none;cursor:pointer;">+</button>
+        </div>
+      </div>
+      <button class="btn-gold press ripple-wrap" style="width:100%;padding:16px;font-size:14px;" onclick="addFromModal()">
+        Adicionar · <span id="mTotal"></span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- WHATSAPP BAR -->
+<div id="waBar" style="position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;z-index:20;padding:10px 16px 20px;">
+  <a href="https://wa.me/551299999999" target="_blank" 
+    class="press ripple-wrap"
+    style="display:flex;align-items:center;justify-content:center;gap:10px;background:#0A1A35;border:1px solid #25D36640;border-radius:999px;padding:14px;box-shadow:0 0 20px #25D36620;text-decoration:none;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+    <span style="font-size:14px;font-weight:600;color:#25D366;">Falar com o Bar</span>
+  </a>
+</div>
+
+<script>
+// ===== DATA =====
+const products = [
+  {id:1,e:'🍺',img:'https://images.unsplash.com/photo-1608270586620-248524c67de9?w=300&h=200&fit=crop',name:'Skol Lata',desc:'350ml gelada',price:5,cat:'cerveja'},
+  {id:2,e:'🍺',img:'https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=300&h=200&fit=crop',name:'Brahma Duplo Malte',desc:'473ml',price:7,cat:'cerveja'},
+  {id:3,e:'🍺',img:'https://images.unsplash.com/photo-1571767454098-246b94fbcf70?w=300&h=200&fit=crop',name:'Heineken',desc:'Long neck 330ml',price:9,cat:'cerveja'},
+  {id:4,e:'🍺',img:'https://images.unsplash.com/photo-1559526324-593bc073d938?w=300&h=200&fit=crop',name:'Chopp Brahma',desc:'400ml gelado',price:11,cat:'cerveja'},
+  {id:5,e:'🍹',img:'https://images.unsplash.com/photo-1551751299-1b51cab2694c?w=300&h=200&fit=crop',name:'Caipirinha',desc:'Limão ou morango',price:14,cat:'drink'},
+  {id:6,e:'🍸',img:'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=300&h=200&fit=crop',name:'Vodka Red Bull',desc:'Clássico energético',price:22,cat:'drink'},
+  {id:7,e:'🥤',img:'https://images.unsplash.com/photo-1629203851122-3726ecdf080e?w=300&h=200&fit=crop',name:'Coca-Cola',desc:'Lata 350ml',price:5,cat:'nao-alc'},
+  {id:8,e:'⚡',img:'https://images.unsplash.com/photo-1551538827-9c037cb4f32a?w=300&h=200&fit=crop',name:'Red Bull',desc:'250ml original',price:12,cat:'nao-alc'},
+  {id:9,e:'🧃',img:'https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=300&h=200&fit=crop',name:'Suco Integral',desc:'Laranja, uva, maçã',price:6,cat:'nao-alc'},
+  {id:10,e:'☕',img:'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300&h=200&fit=crop',name:'Café Expresso',desc:'Curto ou longo',price:4,cat:'quente'},
+  {id:11,e:'🌶️',img:'https://images.unsplash.com/photo-1547592180-85f173990554?w=300&h=200&fit=crop',name:'Quentão',desc:'Canela e cravo',price:8,cat:'quente'},
+  {id:12,e:'🍬',img:'https://images.unsplash.com/photo-1519681393784-d120267933ba?w=300&h=200&fit=crop',name:'Cigarro',desc:'Diversas marcas',price:14,cat:'bomboniere'},
+  {id:13,e:'🔥',img:'https://images.unsplash.com/photo-1598300188904-6287d965a0b7?w=300&h=200&fit=crop',name:'Isqueiro BIC',desc:'Colorido',price:5,cat:'bomboniere'},
+  {id:14,e:'🥜',img:'https://images.unsplash.com/photo-1567337710282-00832b415979?w=300&h=200&fit=crop',name:'Amendoim',desc:'Crocante salgado',price:4,cat:'bomboniere'},
+];
+
+let cart=[], curModal=null, mQty=1, curCat='todos';
+let drink={base:'Cachaça',extras:['Gelo'],size:'Copão',price:18};
+
+// SPLASH
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    document.getElementById('splash').classList.add('hide');
+    document.getElementById('app').style.opacity='1';
+    renderFeatured();
+    renderMenu();
+  },2800);
+});
+
+// NAV
+function navTo(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const pg=document.getElementById('page-'+id);
+  if(pg){pg.classList.add('active');}
+  document.querySelectorAll('.nav-pill').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+}
+
+function navToPage(id){
+  navTo(id,null);
+  // activate correct pill
+  const map={home:0,menu:1,drinks:2,delivery:3,cart:4};
+  const pills=document.querySelectorAll('.nav-pill');
+  if(pills[map[id]])pills[map[id]].classList.add('active');
+}
+
+// FEATURED
+function renderFeatured(){
+  const row=document.getElementById('featuredRow');
+  const feat=products.slice(0,6);
+  row.innerHTML=feat.map(p=>`
+    <div class="snap-item press" onclick="openModal(${p.id})" style="width:150px;">
+      <div class="product-card" style="border-radius:18px;">
+        <div style="width:100%;height:110px;overflow:hidden;position:relative;">
+          <img src="${p.img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+          <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:48px;background:linear-gradient(135deg,#0F2550,#1A3A6B);">${p.e}</div>
+          <div style="position:absolute;inset:0;background:linear-gradient(to top,#0A1A35cc,transparent 60%);"></div>
+        </div>
+        <div style="padding:10px;">
+          <p style="font-size:12px;font-weight:600;color:#fff;margin:0 0 2px;line-height:1.2;">${p.name}</p>
+          <p style="font-size:12px;color:#E6A817;font-weight:700;margin:0;">R$ ${p.price}</p>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// MENU GRID
+function renderMenu(filter=''){
+  const grid=document.getElementById('menuGrid');
+  const list=products.filter(p=>{
+    const mC=curCat==='todos'||p.cat===curCat;
+    const mS=p.name.toLowerCase().includes(filter.toLowerCase())||p.desc.toLowerCase().includes(filter.toLowerCase());
+    return mC&&mS;
+  });
+  grid.innerHTML=list.map(p=>`
+    <div onclick="openModal(${p.id})" class="press product-card" style="cursor:pointer;">
+      <div style="width:100%;height:130px;overflow:hidden;position:relative;">
+        <img src="${p.img}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;transition:transform .3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" onerror="this.style.display='none';this.nextSibling.style.display='flex'">
+        <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;font-size:52px;background:linear-gradient(135deg,#0F2550,#1A3A6B);">${p.e}</div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,#0A1A35ee,transparent 50%);"></div>
+        <div style="position:absolute;top:8px;right:8px;background:#E6A817;border-radius:999px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#061025;font-weight:900;font-size:14px;box-shadow:0 0 8px #E6A81780;">+</div>
+      </div>
+      <div style="padding:10px 12px 12px;">
+        <p style="font-size:13px;font-weight:600;color:#fff;margin:0 0 2px;line-height:1.2;">${p.name}</p>
+        <p style="font-size:11px;color:#ffffff50;margin:0 0 6px;">${p.desc}</p>
+        <span style="font-size:15px;font-weight:700;color:#E6A817;">R$ ${p.price}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterProducts(v){renderMenu(v);}
+function setCategory(cat,btn){
+  curCat=cat;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderMenu(document.getElementById('searchInput').value);
+}
+
+// MODAL
+function openModal(id){
+  const p=products.find(x=>x.id===id); curModal=p; mQty=1;
+  document.getElementById('mEmoji').textContent=p.e;
+  document.getElementById('mName').textContent=p.name;
+  document.getElementById('mDesc').textContent=p.desc;
+  document.getElementById('mPrice').textContent=`R$ ${p.price}`;
+  document.getElementById('mQty').textContent=mQty;
+  document.getElementById('mTotal').textContent=`R$ ${p.price*mQty}`;
+  // Update modal image
+  const imgEl=document.getElementById('mImg');
+  if(imgEl){
+    imgEl.src=p.img;
+    imgEl.onerror=()=>{imgEl.style.display='none';document.getElementById('mEmojiLarge').style.display='flex';};
+    imgEl.style.display='block';
+    document.getElementById('mEmojiLarge').style.display='none';
+  }
+  const m=document.getElementById('productModal');
+  m.classList.remove('hidden');
+  m.style.display='flex';
+  setTimeout(()=>{m.classList.add('show');m.querySelector('.modal-sheet').style.transform='translateY(0)';},10);
+}
+function closeModal(e){
+  if(!e.target.closest('.modal-sheet')){
+    const m=document.getElementById('productModal');
+    m.querySelector('.modal-sheet').style.transform='translateY(100%)';
+    setTimeout(()=>{m.style.display='none';m.classList.add('hidden');m.classList.remove('show');},350);
+  }
+}
+function chgQty(d){
+  mQty=Math.max(1,mQty+d);
+  document.getElementById('mQty').textContent=mQty;
+  document.getElementById('mTotal').textContent=`R$ ${curModal.price*mQty}`;
+}
+function addFromModal(){
+  for(let i=0;i<mQty;i++) addCart({...curModal});
+  closeModal({target:document.getElementById('productModal')});
+  showToast(`${curModal.name} adicionado!`,'🛒');
+}
+
+// CART
+function addCart(item){
+  const ex=cart.find(c=>c.id===item.id&&c.name===item.name);
+  if(ex)ex.qty++;else cart.push({...item,qty:1});
+  updBadge();
+}
+function updBadge(){
+  const t=cart.reduce((s,i)=>s+i.qty,0);
+  document.getElementById('cartPillLabel').textContent=t>0?`Pedido(${t})`:'Pedido';
+}
+function renderCart(){
+  const list=document.getElementById('cartList');
+  const empty=document.getElementById('cartEmptyMsg');
+  if(cart.length===0){list.innerHTML='';empty.style.display='block';
+    document.getElementById('subtotal').textContent='R$ 0,00';
+    document.getElementById('totalAmt').textContent='R$ 0,00';return;}
+  empty.style.display='none';
+  list.innerHTML=cart.map((item,idx)=>`
+    <div style="display:flex;align-items:center;gap:12px;background:#0A1A35;border:1px solid #E6A81730;border-radius:14px;padding:12px;margin-bottom:10px;">
+      <div style="font-size:32px;">${item.e}</div>
+      <div style="flex:1;"><p style="font-size:13px;font-weight:600;color:#fff;margin:0;">${item.name}</p><p style="font-size:12px;color:#E6A817;font-weight:700;margin:0;">R$ ${item.price*item.qty}</p></div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="cQty(${idx},-1)" style="width:28px;height:28px;border-radius:50%;border:1px solid #E6A81750;color:#E6A817;font-weight:700;font-size:14px;background:none;cursor:pointer;">-</button>
+        <span style="color:#fff;font-weight:600;font-size:13px;min-width:16px;text-align:center;">${item.qty}</span>
+        <button onclick="cQty(${idx},1)" style="width:28px;height:28px;border-radius:50%;background:#E6A817;color:#061025;font-weight:700;font-size:14px;border:none;cursor:pointer;">+</button>
+      </div>
+    </div>
+  `).join('');
+  const sub=cart.reduce((s,i)=>s+i.price*i.qty,0);
+  document.getElementById('subtotal').textContent=`R$ ${sub.toFixed(2).replace('.',',')}`;
+  document.getElementById('totalAmt').textContent=`R$ ${sub.toFixed(2).replace('.',',')}`;
+}
+function cQty(idx,d){
+  cart[idx].qty+=d;
+  if(cart[idx].qty<=0)cart.splice(idx,1);
+  updBadge();renderCart();
+}
+
+// DRINK BUILDER
+function selBase(btn,val){
+  document.querySelectorAll('#baseGrid .ing-chip').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');drink.base=val;updDrink();
+}
+function togExtra(btn,val){
+  btn.classList.toggle('on');
+  if(btn.classList.contains('on'))drink.extras.push(val);
+  else drink.extras=drink.extras.filter(e=>e!==val);
+  updDrink();
+}
+function selSize(btn,name,price){
+  document.querySelectorAll('#sizeGrid .ing-chip').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');drink.size=name;drink.price=price;updDrink();
+}
+function updDrink(){
+  const ext=drink.extras.length?` + ${drink.extras.join(', ')}`:'';
+  document.getElementById('drinkPreview').textContent=`${drink.base}${ext} (${drink.size})`;
+  document.getElementById('drinkPrice').textContent=`R$ ${drink.price}`;
+}
+function addDrink(){
+  if(!drink.base){showToast('Escolha a base','⚠️');return;}
+  addCart({id:Date.now(),e:'🍹',name:`${drink.base} ${drink.size}`,desc:drink.extras.join(', '),price:drink.price,cat:'drink'});
+  showToast('Drink adicionado!','🍹');
+  navToPage('delivery');
+}
+
+// DELIVERY
+function setDel(mode){
+  const styles={on:'border:1.5px solid #E6A817;border-radius:999px;padding:10px;font-size:12px;font-weight:700;color:#E6A817;background:#E6A81715;',
+    off:'border:1px solid #ffffff20;border-radius:999px;padding:10px;font-size:12px;font-weight:500;color:#ffffff50;background:none;'};
+  document.getElementById('b-delivery').style.cssText='flex:1;cursor:pointer;'+(mode==='delivery'?styles.on:styles.off);
+  document.getElementById('b-retirada').style.cssText='flex:1;cursor:pointer;'+(mode==='retirada'?styles.on:styles.off);
+  document.getElementById('addrInput').style.display=mode==='delivery'?'block':'none';
+}
+function setPay(mode){
+  ['pix','cartao','dinheiro'].forEach(m=>{
+    const el=document.getElementById('p-'+m);
+    if(m===mode){el.style.cssText='border:1.5px solid #E6A817;border-radius:12px;padding:12px 8px;font-size:12px;font-weight:700;color:#E6A817;background:#E6A81715;cursor:pointer;';}
+    else{el.style.cssText='border:1px solid #ffffff20;border-radius:12px;padding:12px 8px;font-size:12px;font-weight:500;color:#ffffff50;background:none;cursor:pointer;';}
+  });
+}
+function confirmOrder(){
+  if(cart.length===0){showToast('Adicione itens ao pedido','⚠️');return;}
+  cart=[];updBadge();
+  navToPage('cart');
+}
+
+// TOAST
+function showToast(msg,icon='✅'){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  document.getElementById('toastIcon').textContent=icon;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// RIPPLE
+document.addEventListener('click',e=>{
+  const el=e.target.closest('.ripple-wrap');
+  if(!el)return;
+  const r=document.createElement('div');r.className='ripple';
+  const rect=el.getBoundingClientRect();
+  const size=Math.max(rect.width,rect.height);
+  r.style.cssText=`width:${size}px;height:${size}px;left:${e.clientX-rect.left-size/2}px;top:${e.clientY-rect.top-size/2}px`;
+  el.appendChild(r);
+  setTimeout(()=>r.remove(),600);
+});
+
+// On menu page render
+document.querySelector('[onclick="navTo(\'menu\',this)"]')?.addEventListener('click',()=>renderCart());
+
+// Intercept delivery tab to render cart
+const origNavTo=window.navTo;
+window.navTo=function(id,btn){
+  origNavTo(id,btn);
+  if(id==='delivery')renderCart();
+};
+
+// init
+updDrink();
+</script>
+</body>
+</html>
