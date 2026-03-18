@@ -1,6 +1,48 @@
-node_modules
-dist
-.env
-.env.local
-.DS_Store
-*.log
+import { useNavigate, useParams } from 'react-router-dom'
+import { CATEGORIAS, getPorCategoria } from '../lib/catalog'
+import ProductCard from '../components/ProductCard'
+
+export function Categorias() {
+  const nav = useNavigate()
+  return (
+    <div className="screen">
+      <div style={{ background:'#2D5A3D', padding:'14px 14px 12px', position:'sticky', top:0, zIndex:10 }}>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:17, color:'#F0E8D8' }}>Categorias</div>
+      </div>
+      <div style={{ padding:14, display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+        {Object.values(CATEGORIAS).map(c => (
+          <div key={c.id} onClick={() => nav(`/categoria/${c.id}`)} style={{ background:'#fff', borderRadius:18, padding:'20px 14px', border:'1px solid rgba(45,90,61,.1)', display:'flex', flexDirection:'column', alignItems:'center', gap:8, cursor:'pointer' }}>
+            <div style={{ width:64, height:64, borderRadius:'50%', background:c.bg, display:'flex', alignItems:'center', justifyContent:'center', fontSize:32, border:`2px solid ${c.cor}44` }}>{c.emoji}</div>
+            <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:15, color:'#1A2E1F' }}>{c.nome}</div>
+            <div style={{ fontSize:9, color:'#6B8A72', fontWeight:700 }}>{getPorCategoria(c.id).length} produtos</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function CategoriaPage({ cart, onAdd, onRemove }) {
+  const { id } = useParams()
+  const nav = useNavigate()
+  const cat = CATEGORIAS[id]
+  const produtos = getPorCategoria(id)
+
+  if (!cat) return <div style={{ padding:20 }}>Categoria não encontrada</div>
+
+  return (
+    <div className="screen">
+      <div style={{ background:'#2D5A3D', padding:'14px 14px 12px', position:'sticky', top:0, zIndex:10, display:'flex', alignItems:'center', gap:10 }}>
+        <button onClick={() => nav(-1)} style={{ width:28, height:28, borderRadius:'50%', background:'rgba(255,255,255,.15)', border:'none', color:'#fff', fontSize:14, cursor:'pointer' }}>←</button>
+        <span style={{ fontSize:20 }}>{cat.emoji}</span>
+        <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:17, color:'#F0E8D8' }}>{cat.nome}</div>
+        <span style={{ marginLeft:'auto', fontSize:9, color:'#C4A882', fontWeight:700 }}>{produtos.length} produtos</span>
+      </div>
+      <div style={{ padding:'14px 14px', display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:10 }}>
+        {produtos.map(p => (
+          <ProductCard key={p.id} produto={p} qty={cart.items[p.id]||0} onAdd={onAdd} onRemove={onRemove}/>
+        ))}
+      </div>
+    </div>
+  )
+}

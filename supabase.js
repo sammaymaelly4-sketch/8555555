@@ -1,45 +1,30 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
+import { useState } from 'react'
+import { getPorId } from '../lib/catalog'
 
-:root {
-  --verde: #2D5A3D;
-  --verde2: #1E3D2A;
-  --verde3: #3D7A52;
-  --laranja: #E8622A;
-  --laranja2: #FF7A3D;
-  --bege: #C4A882;
-  --bege2: #F0E8D8;
-  --cream: #FAF6EE;
-  --txt: #1A2E1F;
-  --muted: #6B8A72;
-}
+export function useCart() {
+  const [items, setItems] = useState({}) // { prodId: qty }
 
-html, body, #root {
-  height: 100%;
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  background: var(--cream);
-  font-family: 'Nunito', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
+  const add = (prodId) => setItems(prev => ({ ...prev, [prodId]: (prev[prodId] || 0) + 1 }))
+  const remove = (prodId) => setItems(prev => {
+    const n = (prev[prodId] || 0) - 1
+    if (n <= 0) { const s = { ...prev }; delete s[prodId]; return s }
+    return { ...prev, [prodId]: n }
+  })
+  const set = (prodId, qty) => {
+    if (qty <= 0) { setItems(prev => { const s = { ...prev }; delete s[prodId]; return s }) }
+    else setItems(prev => ({ ...prev, [prodId]: qty }))
+  }
+  const clear = () => setItems({})
 
-/* scrollbar clean */
-::-webkit-scrollbar { width: 0; height: 0; }
+  const totalQty = Object.values(items).reduce((a, b) => a + b, 0)
+  const totalPrice = Object.entries(items).reduce((acc, [id, qty]) => {
+    const p = getPorId(id)
+    return acc + (p ? p.preco * qty : 0)
+  }, 0)
 
-/* animações globais */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes pop {
-  from { transform: scale(0.8); opacity: 0; }
-  to   { transform: scale(1);   opacity: 1; }
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
+  const cartItems = Object.entries(items)
+    .map(([id, qty]) => ({ produto: getPorId(id), qty }))
+    .filter(i => i.produto)
+
+  return { items, add, remove, set, clear, totalQty, totalPrice, cartItems }
 }
