@@ -1,0 +1,113 @@
+import { useNavigate } from 'react-router-dom'
+import { useCart } from '../lib/cart'
+import { formatPreco } from '../lib/catalog'
+import BottomNav from '../components/BottomNav'
+
+export default function Carrinho() {
+  const nav = useNavigate()
+  const { items, total, update, remove } = useCart()
+  const taxa = 5.00
+  const totalFinal = total + taxa
+
+  if (items.length === 0) return (
+    <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh', background:'#FAF6EE' }}>
+      <div style={{ background:'#2D5A3D', padding:'14px 16px', display:'flex', alignItems:'center', gap:10 }}>
+        <button onClick={() => nav(-1)} style={{ width:30, height:30, borderRadius:'50%', background:'rgba(255,255,255,.15)', border:'none', color:'#fff', fontSize:16, cursor:'pointer' }}>←</button>
+        <span style={{ fontFamily:"'Fredoka One',cursive", fontSize:17, color:'#F0E8D8' }}>Carrinho</span>
+      </div>
+      <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:16, padding:20 }}>
+        <span style={{ fontSize:64 }}>🛒</span>
+        <p style={{ fontFamily:"'Fredoka One',cursive", fontSize:20, color:'#1A2E1F' }}>Carrinho vazio</p>
+        <p style={{ fontSize:13, color:'#6B8A72', fontWeight:600, textAlign:'center' }}>Adicione produtos para continuar</p>
+        <button onClick={() => nav('/')} style={{ background:'#E8622A', border:'none', borderRadius:14, padding:'12px 28px', fontFamily:"'Fredoka One',cursive", fontSize:16, color:'#fff', cursor:'pointer' }}>
+          Ver produtos
+        </button>
+      </div>
+      <BottomNav />
+    </div>
+  )
+
+  return (
+    <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh', background:'#FAF6EE' }}>
+      <div style={{ background:'#2D5A3D', padding:'12px 14px', position:'sticky', top:0, zIndex:20, display:'flex', alignItems:'center', gap:10 }}>
+        <button onClick={() => nav(-1)} style={{ width:30, height:30, borderRadius:'50%', background:'rgba(255,255,255,.15)', border:'none', color:'#fff', fontSize:16, cursor:'pointer' }}>←</button>
+        <div style={{ flex:1 }}>
+          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:17, color:'#F0E8D8' }}>Meu Carrinho</div>
+          <div style={{ fontSize:9, color:'#C4A882', fontWeight:700 }}>{items.length} {items.length===1?'item':'itens'}</div>
+        </div>
+      </div>
+
+      <div style={{ flex:1, overflowY:'auto', padding:'8px 14px' }}>
+        {/* itens */}
+        {items.map(item => (
+          <div key={item.id} style={{ background:'#fff', borderRadius:14, padding:'10px 12px', marginBottom:8, display:'flex', alignItems:'center', gap:10, border:'1px solid rgba(45,90,61,.08)' }}>
+            <span style={{ fontSize:32, flexShrink:0, width:44, textAlign:'center' }}>{item.imageFallback}</span>
+            <div style={{ flex:1 }}>
+              <p style={{ fontSize:12, fontWeight:800, color:'#1A2E1F', lineHeight:1.2 }}>{item.nome}</p>
+              <small style={{ fontSize:10, color:'#6B8A72', fontWeight:600 }}>{item.descricao}</small>
+              <div style={{ display:'flex', alignItems:'center', gap:6, marginTop:6 }}>
+                <button onClick={() => update(item.id, item.qty-1)} style={{ width:22, height:22, borderRadius:'50%', border:'1.5px solid #2D5A3D', background:'transparent', color:'#2D5A3D', fontSize:14, fontWeight:900, cursor:'pointer' }}>−</button>
+                <span style={{ fontSize:13, fontWeight:900, color:'#1A2E1F', minWidth:14, textAlign:'center' }}>{item.qty}</span>
+                <button onClick={() => update(item.id, item.qty+1)} style={{ width:22, height:22, borderRadius:'50%', background:'#E8622A', border:'none', color:'#fff', fontSize:14, fontWeight:900, cursor:'pointer' }}>+</button>
+                <span style={{ fontSize:10, color:'#6B8A72', fontWeight:700 }}>× {formatPreco(item.preco)}</span>
+              </div>
+            </div>
+            <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:6 }}>
+              <span style={{ fontFamily:"'Fredoka One',cursive", fontSize:14, color:'#E8622A' }}>{formatPreco(item.preco * item.qty)}</span>
+              <button onClick={() => remove(item.id)} style={{ background:'none', border:'none', fontSize:16, cursor:'pointer', opacity:.5 }}>🗑️</button>
+            </div>
+          </div>
+        ))}
+
+        {/* cupom */}
+        <div style={{ background:'#fff', borderRadius:14, padding:'10px 12px', marginBottom:8, border:'1.5px dashed #E8622A', display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ fontSize:16 }}>🏷️</span>
+          <input placeholder="Cupom de desconto" style={{ border:'none', outline:'none', background:'transparent', fontFamily:"'Nunito',sans-serif", fontSize:12, fontWeight:700, color:'#1A2E1F', flex:1 }} />
+          <button style={{ background:'#E8622A', border:'none', borderRadius:8, color:'#fff', fontSize:10, fontWeight:900, padding:'5px 10px', cursor:'pointer' }}>Aplicar</button>
+        </div>
+
+        {/* entrega */}
+        <div style={{ background:'rgba(45,90,61,.06)', borderRadius:12, padding:'10px 12px', marginBottom:8, display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ fontSize:20 }}>🛵</span>
+          <div>
+            <p style={{ fontSize:11, fontWeight:800, color:'#2D5A3D' }}>Entrega em até 30 min</p>
+            <small style={{ fontSize:9, color:'#6B8A72', fontWeight:600 }}>📍 Vila São José · Taubaté SP</small>
+          </div>
+        </div>
+
+        {/* resumo */}
+        <div style={{ background:'#fff', borderRadius:14, padding:'12px 14px', marginBottom:8, border:'1px solid rgba(45,90,61,.08)' }}>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}><span style={{ fontSize:11, color:'#6B8A72', fontWeight:700 }}>Subtotal</span><span style={{ fontSize:11, fontWeight:800, color:'#1A2E1F' }}>{formatPreco(total)}</span></div>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}><span style={{ fontSize:11, color:'#6B8A72', fontWeight:700 }}>Taxa de entrega</span><span style={{ fontSize:11, fontWeight:800, color:'#1A2E1F' }}>{formatPreco(taxa)}</span></div>
+          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}><span style={{ fontSize:11, color:'#6B8A72', fontWeight:700 }}>Desconto</span><span style={{ fontSize:11, fontWeight:800, color:'#2D5A3D' }}>− R$ 0,00</span></div>
+          <div style={{ borderTop:'1px solid rgba(45,90,61,.1)', paddingTop:8, display:'flex', justifyContent:'space-between' }}>
+            <span style={{ fontFamily:"'Fredoka One',cursive", fontSize:16, color:'#1A2E1F' }}>Total</span>
+            <span style={{ fontFamily:"'Fredoka One',cursive", fontSize:16, color:'#E8622A' }}>{formatPreco(totalFinal)}</span>
+          </div>
+        </div>
+
+        {/* pagamento */}
+        <div style={{ marginBottom:8 }}>
+          <p style={{ fontSize:12, fontWeight:800, color:'#1A2E1F', marginBottom:8 }}>💳 Forma de pagamento</p>
+          <div style={{ display:'flex', gap:6 }}>
+            {[{icon:'💚',label:'Pix',active:true},{icon:'💳',label:'Crédito',active:false},{icon:'💵',label:'Dinheiro',active:false}].map(p => (
+              <div key={p.label} style={{ flex:1, background: p.active?'#2D5A3D':'#fff', borderRadius:12, padding:'10px 6px', textAlign:'center', border: p.active?'none':'1.5px solid rgba(45,90,61,.1)', cursor:'pointer' }}>
+                <div style={{ fontSize:18 }}>{p.icon}</div>
+                <div style={{ fontSize:9, fontWeight:900, color: p.active?'#fff':'#6B8A72', marginTop:3 }}>{p.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{ height:8 }} />
+      </div>
+
+      <div style={{ padding:'10px 14px 14px', background:'#FAF6EE', borderTop:'1px solid rgba(45,90,61,.08)' }}>
+        <button onClick={() => alert('Pedido enviado via WhatsApp! 🎉')}
+          style={{ width:'100%', background:'#E8622A', border:'none', borderRadius:16, padding:14, fontFamily:"'Fredoka One',cursive", fontSize:17, color:'#fff', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:8 }}>
+          ✅ Confirmar Pedido · {formatPreco(totalFinal)}
+        </button>
+      </div>
+      <BottomNav />
+    </div>
+  )
+}
