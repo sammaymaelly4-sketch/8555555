@@ -1,45 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom'
-import { CATEGORIAS, getPorCategoria } from '../lib/catalog'
-import { useCart } from '../lib/cart'
-import ProductCard from '../components/ProductCard'
-import BottomNav from '../components/BottomNav'
-
-export default function Categoria() {
-  const { id } = useParams()
-  const nav = useNavigate()
-  const { count } = useCart()
-  const cat = CATEGORIAS[id] || CATEGORIAS.bebidas
-  const produtos = getPorCategoria(cat.id)
-
-  return (
-    <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh', background:'#FAF6EE' }}>
-      <div style={{ background:'#2D5A3D', padding:'12px 14px', position:'sticky', top:0, zIndex:20, display:'flex', alignItems:'center', gap:10 }}>
-        <button onClick={() => nav(-1)} style={{ width:30, height:30, borderRadius:'50%', background:'rgba(255,255,255,.15)', border:'none', color:'#fff', fontSize:16, cursor:'pointer' }}>←</button>
-        <div style={{ flex:1 }}>
-          <div style={{ fontFamily:"'Fredoka One',cursive", fontSize:17, color:'#F0E8D8' }}>{cat.emoji} {cat.nome}</div>
-          <div style={{ fontSize:9, color:'#C4A882', fontWeight:700 }}>{produtos.length} produtos</div>
-        </div>
-        <button onClick={() => nav('/carrinho')} style={{ width:30, height:30, borderRadius:'50%', background:'#E8622A', border:'none', color:'#fff', fontSize:14, cursor:'pointer', position:'relative' }}>
-          🛒{count > 0 && <span style={{ position:'absolute', top:-3, right:-3, width:14, height:14, background:'#fff', borderRadius:'50%', fontSize:8, color:'#E8622A', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900 }}>{count}</span>}
-        </button>
-      </div>
-      {/* sub cats */}
-      <div style={{ padding:'10px 14px 0', display:'flex', gap:8, overflowX:'auto', scrollbarWidth:'none' }}>
-        {Object.values(CATEGORIAS).map(c => (
-          <button key={c.id} onClick={() => nav(`/categoria/${c.id}`)}
-            style={{ flexShrink:0, padding:'5px 14px', borderRadius:99, border:'none', cursor:'pointer', fontFamily:"'Nunito',sans-serif", fontSize:11, fontWeight:900,
-              background: c.id===cat.id ? '#E8622A' : 'rgba(45,90,61,.08)', color: c.id===cat.id ? '#fff' : '#6B8A72' }}>
-            {c.emoji} {c.nome}
-          </button>
-        ))}
-      </div>
-      <div style={{ flex:1, padding:'12px 14px', overflowY:'auto' }}>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(140px,1fr))', gap:10 }}>
-          {produtos.map(p => <ProductCard key={p.id} produto={p} />)}
-        </div>
-        <div style={{ height:16 }} />
-      </div>
-      <BottomNav />
-    </div>
-  )
-}
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="120" fill="#2D5A3D"/>
+  <text x="256" y="340" font-size="280" text-anchor="middle">🛒</text>
+</svg>

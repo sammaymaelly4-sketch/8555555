@@ -1,45 +1,33 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
+import { useNavigate, useLocation } from 'react-router-dom'
 
-:root {
-  --verde: #2D5A3D;
-  --verde2: #1E3D2A;
-  --verde3: #3D7A52;
-  --laranja: #E8622A;
-  --laranja2: #FF7A3D;
-  --bege: #C4A882;
-  --bege2: #F0E8D8;
-  --cream: #FAF6EE;
-  --txt: #1A2E1F;
-  --muted: #6B8A72;
-}
+const TABS = [
+  { path:'/home',       icon:'🏠', label:'Início' },
+  { path:'/categorias', icon:'☰',  label:'Categorias' },
+  { path:'/carrinho',   icon:'🛒',  label:'Carrinho' },
+  { path:'/pedidos',    icon:'📦',  label:'Pedidos' },
+  { path:'/perfil',     icon:'👤',  label:'Perfil' },
+]
 
-html, body, #root {
-  height: 100%;
-  width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  background: var(--cream);
-  font-family: 'Nunito', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
-}
+export default function BottomNav({ cartQty = 0 }) {
+  const nav = useNavigate()
+  const { pathname } = useLocation()
 
-/* scrollbar clean */
-::-webkit-scrollbar { width: 0; height: 0; }
-
-/* animações globais */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes pop {
-  from { transform: scale(0.8); opacity: 0; }
-  to   { transform: scale(1);   opacity: 1; }
-}
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.5; }
+  return (
+    <nav style={{ background:'#fff', borderTop:'1px solid rgba(45,90,61,.1)', display:'flex', flexShrink:0 }}>
+      {TABS.map(t => {
+        const active = pathname === t.path
+        return (
+          <button key={t.path} onClick={() => nav(t.path)} style={{ flex:1, border:'none', background:'none', padding:'8px 0 10px', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
+            <span style={{ fontSize:18, position:'relative' }}>
+              {t.icon}
+              {t.path === '/carrinho' && cartQty > 0 && (
+                <span style={{ position:'absolute', top:-4, right:-6, background:'#E8622A', color:'#fff', fontSize:8, fontWeight:900, width:14, height:14, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center' }}>{cartQty}</span>
+              )}
+            </span>
+            <span style={{ fontSize:8, fontWeight:700, color: active ? '#E8622A' : '#6B8A72', fontFamily:"'Nunito',sans-serif" }}>{t.label}</span>
+          </button>
+        )
+      })}
+    </nav>
+  )
 }

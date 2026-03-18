@@ -6,7 +6,7 @@ import BottomNav from '../components/BottomNav'
 
 export default function Home() {
   const nav = useNavigate()
-  const { count } = useCart()
+  const { totalQty } = useCart()
   const destaques = getDestaques().slice(0, 6)
   const rapidos   = getPorCategoria('bebidas').slice(0, 4)
 
@@ -22,7 +22,7 @@ export default function Home() {
           <div style={{ display:'flex', gap:8 }}>
             <button onClick={() => nav('/perfil')} style={{ width:30, height:30, borderRadius:'50%', background:'rgba(255,255,255,.13)', border:'none', color:'#fff', fontSize:14, cursor:'pointer' }}>👤</button>
             <button onClick={() => nav('/carrinho')} style={{ width:30, height:30, borderRadius:'50%', background:'#E8622A', border:'none', color:'#fff', fontSize:14, cursor:'pointer', position:'relative' }}>
-              🛒{count > 0 && <span style={{ position:'absolute', top:-3, right:-3, width:14, height:14, background:'#fff', borderRadius:'50%', fontSize:8, color:'#E8622A', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900 }}>{count}</span>}
+              🛒{totalQty > 0 && <span style={{ position:'absolute', top:-3, right:-3, width:14, height:14, background:'#fff', borderRadius:'50%', fontSize:8, color:'#E8622A', display:'flex', alignItems:'center', justifyContent:'center', fontWeight:900 }}>{totalQty}</span>}
             </button>
           </div>
         </div>
