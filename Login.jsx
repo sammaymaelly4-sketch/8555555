@@ -43,16 +43,27 @@ export const getDestaques      = ()    => PRODUTOS.filter(p => p.ativo && p.dest
 export const getPorId          = (id)  => PRODUTOS.find(p => p.id === id)
 export const formatPreco       = (v)   => `R$ ${v.toFixed(2).replace('.',',')}`
 
+// ⚡ Bolt: Cache API image resolution to prevent duplicate network requests
+const _imageCache = new Map()
+
 export async function resolveImage(produto) {
   if (produto.imageOverride) return produto.imageOverride
   if (produto.barcode) {
-    try {
-      const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${produto.barcode}.json`,
-        { headers: { 'User-Agent': 'MercadinhoCarmen/1.0' } })
-      const d = await r.json()
-      const url = d?.product?.image_front_url
-      if (url) return url
-    } catch (_) {}
+    if (_imageCache.has(produto.barcode)) return _imageCache.get(produto.barcode)
+
+    const promise = (async () => {
+      try {
+        const r = await fetch(`https://world.openfoodfacts.org/api/v2/product/${produto.barcode}.json`,
+          { headers: { 'User-Agent': 'MercadinhoCarmen/1.0' } })
+        const d = await r.json()
+        const url = d?.product?.image_front_url
+        if (url) return url
+      } catch (_) {}
+      return null
+    })()
+
+    _imageCache.set(produto.barcode, promise)
+    return promise
   }
   return null
 }
